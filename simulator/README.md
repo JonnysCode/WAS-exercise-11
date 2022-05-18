@@ -5,7 +5,7 @@ The simulator is programmed in Node-Red environment. To get it running, you need
 
 ### Steps
 1. Install Node-Red by following the instruction here https://nodered.org/docs/getting-started/local
-2. Start Node-Red and import the flow (menu expander at top-left, then "Import").
+2. Start Node-Red and import the flow (menu expander at top-right, then "Import").
 3. Deploy the flow
 4. The status endpoint is http://localhost:1880/was/rl/status Example response:
 
