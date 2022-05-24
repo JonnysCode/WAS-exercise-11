@@ -72,6 +72,8 @@ public class QLearner extends Artifact {
 
     for (int i = 0; i < (int) episodes; i++) {
 
+      // TODO: For all possible goal states ???
+
       while (!goalReached(goalDescription)) {
         int state = lab.readCurrentState();
         int action = epsilonGreedyStrategy(state, qTable, (double) epsilon);
@@ -84,6 +86,28 @@ public class QLearner extends Artifact {
     }
 
     qTables.put(goalKey(goalDescription), qTable);
+  }
+
+  /**
+   * 
+   * @param goalDescription  desired lab state (e.g., [2,3])
+   * @param stateDescription current state of the lab (e.g.,
+   *                         [2,2,true,false,true,true,2])
+   */
+  @OPERATION
+  public void getActionFromState(Object[] goalDescription, Object[] stateDescription, OpFeedbackParam<String> actionTag,
+      OpFeedbackParam<Object[]> payloadTags, OpFeedbackParam<Object[]> payload) {
+    double[][] qTable = qTables.get(goalKey(goalDescription));
+
+    List<Integer> stateDesc = Arrays.asList(stateDescription).stream().map(o -> (int) o).toList();
+    int state = new ArrayList<>(lab.stateSpace).indexOf(stateDesc);
+
+    int actionIndex = bestAction(lab.getApplicableActions(state), qTable[state]);
+
+    Action action = lab.getAction(actionIndex);
+    actionTag.set(action.getActionTag());
+    payloadTags.set(action.getPayloadTags());
+    payload.set(action.getPayload());
   }
 
   private int goalKey(Object[] goalDescription) {
@@ -121,24 +145,32 @@ public class QLearner extends Artifact {
   private int epsilonGreedyStrategy(int state, double[][] qTable, double epsilon) {
 
     List<Integer> actions = lab.getApplicableActions(state);
-    int a = actions.get(0);
+    int action = actions.get(0);
 
     if (random.nextDouble() < epsilon) {
-      a = actions.get(random.nextInt(actions.size()));
+      action = actions.get(random.nextInt(actions.size()));
     } else {
-      double max = Double.MIN_VALUE;
-      for (Integer action : actions) {
-        if (qTable[state][action] > max) {
-          max = qTable[state][action];
-          a = action;
-        }
+      action = bestAction(actions, qTable[state]);
+    }
+
+    return action;
+  }
+
+  private int bestAction(List<Integer> actions, double[] actionValues) {
+    int action = actions.get(0);
+    double max = Double.MIN_VALUE;
+
+    for (Integer a : actions) {
+      if (actionValues[a] > max) {
+        max = actionValues[a];
+        action = a;
       }
     }
 
-    return a;
+    return action;
   }
 
-  public boolean goalReached(Object[] goalDescription) {
+  private boolean goalReached(Object[] goalDescription) {
     return Arrays.equals(lab.currentState.subList(0, 2).toArray(), goalDescription);
   }
 
@@ -171,5 +203,13 @@ public class QLearner extends Artifact {
       }
     }
     return qTable;
+  }
+
+  public static void main(String[] args) {
+    QLearner learner = new QLearner();
+
+    learner.init("https://raw.githubusercontent.com/Interactions-HSG/example-tds/was/tds/interactions-lab.ttl");
+
+    learner.calculateQ(new Object[] { 2, 3 }, 10, 0.1, 0.5, 0.2, 100);
   }
 }
