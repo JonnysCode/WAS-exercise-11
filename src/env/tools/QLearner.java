@@ -2,9 +2,13 @@ package tools;
 
 import java.util.*;
 import java.util.logging.*;
+
+import com.ibm.icu.impl.UResource.Array;
+
 import cartago.Artifact;
 import cartago.OPERATION;
 import cartago.OpFeedbackParam;
+import jason.functions.log;
 
 public class QLearner extends Artifact {
 
@@ -70,20 +74,24 @@ public class QLearner extends Artifact {
 
     double[][] qTable = initializeQTable();
 
-    for (int i = 0; i < Integer.valueOf(episodes.toString()); i++) {
+    for (int i = 0; i < toInt(episodes); i++) {
 
       // TODO: For all possible goal states ???
+      int counter = 0;
 
-      while (!goalReached(goalDescription)) {
+      while (counter++ < 100) {// (!goalReached(goalDescription)) {
         int state = lab.readCurrentState();
-        int action = epsilonGreedyStrategy(state, qTable, Double.valueOf(epsilon.toString()));
+        int action = epsilonGreedyStrategy(state, qTable, toDouble(epsilon));
 
         lab.performAction(action);
-        double actionReward = getActionReward(Integer.valueOf(reward.toString()), goalReached(goalDescription), action);
+        double actionReward = getActionReward(toInt(reward), goalReached(goalDescription), action);
 
-        qTable[state][action] = qNew(qTable,
-            Double.valueOf(alpha.toString()), actionReward, Double.valueOf(gamma.toString()), state, action);
+        qTable[state][action] = qNew(qTable, toDouble(alpha), actionReward, toDouble(gamma), state, action);
+
+        // log("STATE: " + state + " action: " + action + " reward: " + actionReward);
       }
+
+      // printQTable(qTable);
     }
 
     qTables.put(goalKey(goalDescription), qTable);
@@ -100,7 +108,7 @@ public class QLearner extends Artifact {
       OpFeedbackParam<Object[]> payloadTags, OpFeedbackParam<Object[]> payload) {
     double[][] qTable = qTables.get(goalKey(goalDescription));
 
-    List<Integer> stateDesc = Arrays.asList(stateDescription).stream().map(o -> Integer.valueOf(o.toString())).toList();
+    List<Integer> stateDesc = Arrays.asList(stateDescription).stream().map(this::toInt).toList();
     int state = new ArrayList<>(lab.stateSpace).indexOf(stateDesc);
 
     int actionIndex = bestAction(lab.getApplicableActions(state), qTable[state]);
@@ -111,8 +119,16 @@ public class QLearner extends Artifact {
     payload.set(action.getPayload());
   }
 
-  private int goalKey(Object[] goalDescription) {
-    return (int) goalDescription[0] * 10 + (int) goalDescription[1];
+  private double toDouble(Object o) {
+    return Double.valueOf(o.toString());
+  }
+
+  private int toInt(Object o) {
+    return Integer.valueOf(o.toString());
+  }
+
+  private int goalKey(Object[] gd) {
+    return Integer.valueOf(gd[0].toString()) * 10 + Integer.valueOf(gd[1].toString());
   }
 
   private double qNew(double[][] qTable, double alpha, double reward, double gamma, int state, int action) {
@@ -172,7 +188,13 @@ public class QLearner extends Artifact {
   }
 
   private boolean goalReached(Object[] goalDescription) {
-    return Arrays.equals(lab.currentState.subList(0, 2).toArray(), goalDescription);
+    Object[] goalObjects = lab.currentState.subList(0, 2).toArray();
+
+    if (Arrays.equals(goalObjects, goalDescription))
+      log(Arrays.equals(goalObjects, goalDescription) + " :: " + Arrays.toString(goalObjects) + " to "
+          + Arrays.toString(goalDescription));
+
+    return Arrays.equals(goalObjects, goalDescription);
   }
 
   /**

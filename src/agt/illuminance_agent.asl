@@ -14,4 +14,4 @@ task_requirements([2,3]).
   .print("Lab environment URL: ", Url);
   .print("I want to achieve Z1Level=", Z1Level, " and Z2Level=",Z2Level);
   makeArtifact("Qlearner", "tools.QLearner", [Url], QlearnerId);
-  calculateQ([Z1Level, Z2Level], 10, 0.1, 0.5, 0.2, 100).
+  calculateQ([Z1Level, Z2Level], 1, 0.1, 0.5, 0.8, 150).
