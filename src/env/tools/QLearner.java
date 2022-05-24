@@ -70,18 +70,19 @@ public class QLearner extends Artifact {
 
     double[][] qTable = initializeQTable();
 
-    for (int i = 0; i < (int) episodes; i++) {
+    for (int i = 0; i < Integer.valueOf(episodes.toString()); i++) {
 
       // TODO: For all possible goal states ???
 
       while (!goalReached(goalDescription)) {
         int state = lab.readCurrentState();
-        int action = epsilonGreedyStrategy(state, qTable, (double) epsilon);
+        int action = epsilonGreedyStrategy(state, qTable, Double.valueOf(epsilon.toString()));
 
         lab.performAction(action);
-        double actionReward = getActionReward((double) reward, goalReached(goalDescription), action);
+        double actionReward = getActionReward(Integer.valueOf(reward.toString()), goalReached(goalDescription), action);
 
-        qTable[state][action] = qNew(qTable, (double) alpha, actionReward, (double) gamma, state, action);
+        qTable[state][action] = qNew(qTable,
+            Double.valueOf(alpha.toString()), actionReward, Double.valueOf(gamma.toString()), state, action);
       }
     }
 
@@ -99,7 +100,7 @@ public class QLearner extends Artifact {
       OpFeedbackParam<Object[]> payloadTags, OpFeedbackParam<Object[]> payload) {
     double[][] qTable = qTables.get(goalKey(goalDescription));
 
-    List<Integer> stateDesc = Arrays.asList(stateDescription).stream().map(o -> (int) o).toList();
+    List<Integer> stateDesc = Arrays.asList(stateDescription).stream().map(o -> Integer.valueOf(o.toString())).toList();
     int state = new ArrayList<>(lab.stateSpace).indexOf(stateDesc);
 
     int actionIndex = bestAction(lab.getApplicableActions(state), qTable[state]);
