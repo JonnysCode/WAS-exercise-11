@@ -12,5 +12,6 @@ task_requirements([2,3]).
 +!start : learning_lab_environment(Url) & task_requirements([Z1Level, Z2Level])
 <-
   .print("Lab environment URL: ", Url);
-  .print("I want to achieve Z1Level=", Z1Level, " and Z2Level=",Z2Level)
-  .
+  .print("I want to achieve Z1Level=", Z1Level, " and Z2Level=",Z2Level);
+  makeArtifact("Qlearner", "tools.QLearner", [Url], QlearnerId);
+  calculateQ([Z1Level, Z2Level], 10, 0.1, 0.5, 0.2, 100).
